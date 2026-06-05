@@ -210,11 +210,11 @@ const ITEM_IMGS = {
 ═══════════════════════════════════════ */
 const QUESTIONS = {
   table:[
-    {item:'pencil',prep:'on',        sentence:'The pencil is on the table.',     zones:[{id:'z1',top:'30%',left:'35%',w:'22%',h:'28%'}]},
-    {item:'eraser',prep:'under',    sentence:'The eraser is under the table.',  zones:[{id:'z1',top:'72%',left:'35%',w:'22%',h:'20%'}]},
-    {item:'apple', prep:'on',        sentence:'The apple is on the table.',      zones:[{id:'z1',top:'30%',left:'35%',w:'22%',h:'28%'}]},
-    {item:'pencil',prep:'under',    sentence:'The pencil is under the table.',   zones:[{id:'z1',top:'72%',left:'35%',w:'22%',h:'20%'}]},
-    {item:'eraser',prep:'on',        sentence:'The eraser is on the table.', zones:[{id:'z1',top:'30%',left:'35%',w:'22%',h:'28%'}]},
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the table.',     zones:[{id:'z1',top:'30%',left:'35%',w:'22%',h:'28%',correct:true}]},
+    {item:'eraser',prep:'under',    sentence:'The eraser is under the table.',  zones:[{id:'z1',top:'72%',left:'35%',w:'22%',h:'20%',correct:true}]},
+    {item:'apple', prep:'on',        sentence:'The apple is on the table.',      zones:[{id:'z1',top:'30%',left:'35%',w:'22%',h:'28%',correct:true}]},
+    {item:'pencil',prep:'under',    sentence:'The pencil is under the table.',   zones:[{id:'z1',top:'72%',left:'35%',w:'22%',h:'20%',correct:true}]},
+    {item:'eraser',prep:'on',        sentence:'The eraser is on the table.', zones:[{id:'z1',top:'30%',left:'35%',w:'22%',h:'28%',correct:true}]},
     // Q6-10: +1 distractor zone
     {item:'apple', prep:'under',    sentence:'The apple is under the table.',    zones:[
       {id:'z1',top:'72%',left:'35%',w:'22%',h:'20%',correct:true},
@@ -238,11 +238,11 @@ const QUESTIONS = {
     ]},
   ],
   chair:[
-    {item:'pencil',prep:'on',        sentence:'The pencil is on the chair.',     zones:[{id:'z1',top:'35%',left:'38%',w:'20%',h:'22%'}]},
-    {item:'eraser',prep:'behind',   sentence:'The eraser is behind the chair.', zones:[{id:'z1',top:'35%',left:'68%',w:'18%',h:'22%'}]},
-    {item:'apple', prep:'on',        sentence:'The apple is on the chair.',      zones:[{id:'z1',top:'35%',left:'38%',w:'20%',h:'22%'}]},
-    {item:'pencil',prep:'behind',   sentence:'The pencil is behind the chair.', zones:[{id:'z1',top:'35%',left:'68%',w:'18%',h:'22%'}]},
-    {item:'eraser',prep:'on',        sentence:'The eraser is on the chair.', zones:[{id:'z1',top:'35%',left:'38%',w:'20%',h:'22%'}]},
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the chair.',     zones:[{id:'z1',top:'35%',left:'38%',w:'20%',h:'22%',correct:true}]},
+    {item:'eraser',prep:'behind',   sentence:'The eraser is behind the chair.', zones:[{id:'z1',top:'35%',left:'68%',w:'18%',h:'22%',correct:true}]},
+    {item:'apple', prep:'on',        sentence:'The apple is on the chair.',      zones:[{id:'z1',top:'35%',left:'38%',w:'20%',h:'22%',correct:true}]},
+    {item:'pencil',prep:'behind',   sentence:'The pencil is behind the chair.', zones:[{id:'z1',top:'35%',left:'68%',w:'18%',h:'22%',correct:true}]},
+    {item:'eraser',prep:'on',        sentence:'The eraser is on the chair.', zones:[{id:'z1',top:'35%',left:'38%',w:'20%',h:'22%',correct:true}]},
     // Q6-10: +1 distractor item
     {item:'apple', prep:'behind',   sentence:'The apple is behind the chair.',  zones:[
       {id:'z1',top:'35%',left:'68%',w:'18%',h:'22%',correct:true}
@@ -261,11 +261,11 @@ const QUESTIONS = {
     ],distractorItem:'eraser'},
   ],
   schoolbag:[
-    {item:'pencil',prep:'in',        sentence:'The pencil is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%'}]},
-    {item:'eraser',prep:'in',        sentence:'The eraser is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%'}]},
-    {item:'apple', prep:'in',        sentence:'The apple is in the school bag.',  zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%'}]},
-    {item:'pencil',prep:'in',        sentence:'The pencil is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%'}]},
-    {item:'eraser',prep:'in',        sentence:'The eraser is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%'}]},
+    {item:'pencil',prep:'in',        sentence:'The pencil is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true}]},
+    {item:'eraser',prep:'in',        sentence:'The eraser is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true}]},
+    {item:'apple', prep:'in',        sentence:'The apple is in the school bag.',  zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true}]},
+    {item:'pencil',prep:'in',        sentence:'The pencil is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true}]},
+    {item:'eraser',prep:'in',        sentence:'The eraser is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true}]},
     // Q6-10: +1 distractor zone
     {item:'apple', prep:'in',        sentence:'The apple is in the school bag.', zones:[
       {id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true},
@@ -289,11 +289,11 @@ const QUESTIONS = {
     ]},
   ],
   box:[
-    {item:'pencil',prep:'on',        sentence:'The pencil is on the box.',       zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%'}]},
-    {item:'eraser',prep:'on',        sentence:'The eraser is on the box.',     zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%'}]},
-    {item:'apple', prep:'on',        sentence:'The apple is on the box.',        zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%'}]},
-    {item:'pencil',prep:'on',        sentence:'The pencil is on the box.',       zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%'}]},
-    {item:'eraser',prep:'on',        sentence:'The eraser is on the box.',     zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%'}]},
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the box.',       zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true}]},
+    {item:'eraser',prep:'on',        sentence:'The eraser is on the box.',     zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true}]},
+    {item:'apple', prep:'on',        sentence:'The apple is on the box.',        zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true}]},
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the box.',       zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true}]},
+    {item:'eraser',prep:'on',        sentence:'The eraser is on the box.',     zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true}]},
     // Q6-10: +1 distractor zone
     {item:'apple', prep:'on',        sentence:'The apple is on the box.',        zones:[
       {id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true},
@@ -329,7 +329,7 @@ let completedWorlds = new Set();
 let ttsEnabled = true;
 let draggedItem = null;
 let draggedEl = null;
-let snapRadius = 50; // px snap radius for touch
+let snapRadius = 80; // px snap radius - larger for iPad touch
 
 // Load saved progress
 function loadProgress(){
