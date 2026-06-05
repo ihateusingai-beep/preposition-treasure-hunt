@@ -66,10 +66,8 @@ button:active{transform:scale(.95)}
 #feedback-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center}
 #feedback-overlay.show{display:flex}
 .feedback-box{background:var(--card);border:3px solid var(--accent);border-radius:16px;padding:24px;max-width:340px;text-align:center}
-.feedback-box.correct{border-color:var(--green)}
-.feedback-box h3{font-size:1.4rem;margin-bottom:12px}
-.feedback-box.correct h3{color:var(--green)}
-.feedback-box.wrong h3{color:var(--accent)}
+.feedback-box h3{font-size:1.4rem;margin-bottom:12px;color:var(--accent)}
+.feedback-box h3{color:var(--accent)}
 .feedback-box img{width:200px;height:200px;object-fit:contain;border-radius:8px;margin:10px 0}
 .feedback-box p{font-size:1rem;color:#ccc;margin-bottom:16px}
 .feedback-box .preposition{font-size:2rem;font-weight:bold;color:var(--gold);margin-bottom:10px}
@@ -182,8 +180,6 @@ html,body{font-size:16px}
 /* ═══════════════════════════════════════
    GAME DATA
 ═══════════════════════════════════════ */
-const PREPOSITIONS = ['on','under','in','behind','in front of'];
-const ITEMS = ['pencil','eraser','apple'];
 const SCENES = {
   table:    { img:'assets/images/scenarios/scenario_table.png',    label:'Table' },
   chair:    { img:'assets/images/scenarios/scenario_chair.png',    label:'Chair' },
@@ -385,6 +381,7 @@ function startWorld(world){
   currentWorld = world;
   currentQ = 0;
   score = 0;
+  wrongAnswers = []; // clear per-world
   showScreen('game-screen');
   document.getElementById('world-label').textContent = 'World: ' + SCENES[world].label;
   document.getElementById('scene-img').src = SCENES[world].img;
@@ -398,7 +395,7 @@ function loadQuestion(){
 
   // Update header
   document.getElementById('progress-text').textContent = `Q${currentQ+1} / ${qs.length}`;
-  document.getElementById('progress-fill').style.width = `${(currentQ/qs.length)*100}%`;
+  document.getElementById('progress-fill').style.width = `${(currentQ / qs.length) * 100}%`;
 
   // Sentence
   document.getElementById('sentence-text').textContent = q.sentence;
@@ -440,93 +437,85 @@ function loadQuestion(){
 }
 
 function setupDragItem(el){
-  // Mouse drag
-  el.addEventListener('dragstart',e=>{
-    draggedItem=el.dataset.item;
-    draggedEl=el;
+  el.style.touchAction = 'none'; // prevent browser gestures
+  let dragging = false, clone = null, startX = 0, startY = 0;
+
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+    dragging = true;
+    draggedItem = el.dataset.item;
+    draggedEl = el;
+    startX = e.clientX;
+    startY = e.clientY;
     el.classList.add('dragging');
-    e.dataTransfer.effectAllowed='move';
-    e.dataTransfer.setData('text/plain',draggedItem);
-  });
-  el.addEventListener('dragend',e=>{
-    el.classList.remove('dragging');
-    draggedItem=null;draggedEl=null;
+    // clone for visual feedback
+    clone = el.cloneNode(true);
+    clone.style.position = 'fixed';
+    clone.style.width = el.offsetWidth + 'px';
+    clone.style.height = el.offsetHeight + 'px';
+    clone.style.left = e.clientX - el.offsetWidth/2 + 'px';
+    clone.style.top = e.clientY - el.offsetHeight/2 + 'px';
+    clone.style.opacity = '.85';
+    clone.style.pointerEvents = 'none';
+    clone.style.zIndex = '999';
+    clone.style.transform = 'scale(1.1)';
+    clone.style.boxShadow = '0 8px 24px rgba(0,0,0,.4)';
+    document.body.appendChild(clone);
   });
 
-  // Touch drag
-  let touchClone=null, startX, startY;
-  el.addEventListener('touchstart',e=>{
-    e.preventDefault();
-    draggedItem=el.dataset.item;
-    draggedEl=el;
-    const t=e.touches[0];
-    startX=t.clientX; startY=t.clientY;
-    // clone for visual drag
-    touchClone=el.cloneNode(true);
-    touchClone.style.position='fixed';
-    touchClone.style.width=el.offsetWidth+'px';
-    touchClone.style.height=el.offsetHeight+'px';
-    touchClone.style.left=t.clientX-el.offsetWidth/2+'px';
-    touchClone.style.top=t.clientY-el.offsetHeight/2+'px';
-    touchClone.style.opacity='.85';
-    touchClone.style.pointerEvents='none';
-    touchClone.style.zIndex='999';
-    touchClone.style.transform='scale(1.1)';
-    document.body.appendChild(touchClone);
-    el.classList.add('dragging');
-  },{passive:false});
-  el.addEventListener('touchmove',e=>{
-    e.preventDefault();
-    if(!touchClone)return;
-    const t=e.touches[0];
-    touchClone.style.left=t.clientX-el.offsetWidth/2+'px';
-    touchClone.style.top=t.clientY-el.offsetHeight/2+'px';
-    // highlight drop zones near touch
-    document.querySelectorAll('.drop-zone').forEach(dz=>{
-      const r=dz.getBoundingClientRect();
-      const cx=r.left+r.width/2, cy=r.top+r.height/2;
-      const dist=Math.hypot(t.clientX-cx,t.clientY-cy);
-      dz.classList.toggle('hover',dist<snapRadius*2);
+  el.addEventListener('pointermove', e => {
+    if (!dragging || !clone) return;
+    clone.style.left = e.clientX - el.offsetWidth/2 + 'px';
+    clone.style.top = e.clientY - el.offsetHeight/2 + 'px';
+    // highlight drop zones near pointer
+    document.querySelectorAll('.drop-zone').forEach(dz => {
+      const r = dz.getBoundingClientRect();
+      const cx = r.left + r.width/2, cy = r.top + r.height/2;
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+      dz.classList.toggle('hover', dist < snapRadius * 2);
     });
-  },{passive:false});
-  el.addEventListener('touchend',e=>{
+  });
+
+  el.addEventListener('pointerup', e => {
+    if (!dragging) return;
     e.preventDefault();
-    if(touchClone){
-      const t=e.changedTouches[0];
-      // find closest drop zone within snap radius
-      let bestZone=null, bestDist=snapRadius;
-      document.querySelectorAll('.drop-zone').forEach(dz=>{
-        const r=dz.getBoundingClientRect();
-        const cx=r.left+r.width/2, cy=r.top+r.height/2;
-        const dist=Math.hypot(t.clientX-cx,t.clientY-cy);
-        if(dist<bestDist){bestDist=dist;bestZone=dz;}
-      });
-      if(bestZone){
-        handleDrop(bestZone,draggedItem);
-      }
-      document.body.removeChild(touchClone);
-      touchClone=null;
-    }
+    dragging = false;
     el.classList.remove('dragging');
-    document.querySelectorAll('.drop-zone').forEach(dz=>dz.classList.remove('hover'));
-    draggedItem=null;draggedEl=null;
-  },{passive:false});
+
+    if (clone) {
+      // find closest drop zone within snap radius (using rect, not %)
+      let bestZone = null, bestDist = snapRadius;
+      document.querySelectorAll('.drop-zone').forEach(dz => {
+        const r = dz.getBoundingClientRect();
+        const cx = r.left + r.width/2, cy = r.top + r.height/2;
+        const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+        if (dist < bestDist) { bestDist = dist; bestZone = dz; }
+      });
+      if (bestZone) handleDrop(bestZone, draggedItem);
+      document.body.removeChild(clone);
+      clone = null;
+    }
+
+    document.querySelectorAll('.drop-zone').forEach(dz => dz.classList.remove('hover'));
+    draggedItem = null;
+    draggedEl = null;
+  });
+
+  el.addEventListener('pointercancel', () => {
+    dragging = false;
+    if (clone) { document.body.removeChild(clone); clone = null; }
+    el.classList.remove('dragging');
+    document.querySelectorAll('.drop-zone').forEach(dz => dz.classList.remove('hover'));
+    draggedItem = null;
+    draggedEl = null;
+  });
 }
 
 function setupDropZone(dz){
-  dz.addEventListener('dragover',e=>{
-    e.preventDefault();
-    dz.classList.add('hover');
-  });
-  dz.addEventListener('dragleave',e=>{
-    dz.classList.remove('hover');
-  });
-  dz.addEventListener('drop',e=>{
-    e.preventDefault();
-    dz.classList.remove('hover');
-    const item=e.dataTransfer.getData('text/plain');
-    handleDrop(dz,item);
-  });
+  // Drop zones are purely visual now — snapping is handled
+  // by pointer proximity in setupDragItem's pointerup handler.
+  // No dragover/dragleave/drop needed.
 }
 
 function handleDrop(dropZone,itemName){
@@ -569,13 +558,10 @@ function showFeedback(q,itemName){
 
 function closeFeedback(){
   document.getElementById('feedback-overlay').classList.remove('show');
-  // Reset items for retry
-  document.querySelectorAll('.drag-item').forEach(img=>{
-    img.classList.remove('placed');
- });
-  document.querySelectorAll('.drop-zone').forEach(dz=>{
-    dz.classList.remove('correct','wrong');
-  });
+  document.querySelectorAll('.drag-item').forEach(img=>img.classList.remove('placed'));
+  document.querySelectorAll('.drop-zone').forEach(dz=>dz.classList.remove('correct','wrong'));
+  draggedItem = null;
+  draggedEl = null;
 }
 
 function finishWorld(){
