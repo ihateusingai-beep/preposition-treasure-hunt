@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Preposition Treasure Hunt</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;touch-action:manipulation}
+:root{
+--bg:#1a1a2e;--card:#16213e;--accent:#e94560;--gold:#f5c518;
+--green:#4ecca3;--blue:#4a90e2;--white:#f0f0f0;--font:'Comic Sans MS','Arial Rounded MT Bold',Arial,sans-serif
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--white);font-family:var(--font);font-size:18px;user-select:none}
+button{font-family:var(--font);cursor:pointer;border:none;border-radius:12px;font-size:18px;padding:14px 28px;transition:transform .1s,box-shadow .1s}
+button:active{transform:scale(.95)}
+.btn-primary{background:var(--gold);color:#1a1a2e;font-weight:bold;box-shadow:0 4px 0 #b8900a}
+.btn-primary:active{box-shadow:0 2px 0 #b8900a}
+.btn-secondary{background:var(--blue);color:#fff}
+.btn-restart{background:var(--green);color:#1a1a2e;font-weight:bold}
+
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.screen.active{display:flex}
+
+/* ── MAP SCREEN ── */
+#map-screen{background:linear-gradient(135deg,#1a1a2e0%,#16213e 100%)}
+.map-title{font-size:2rem;font-weight:bold;color:var(--gold);text-align:center;margin-bottom:8px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.map-subtitle{font-size:1rem;color:#aaa;margin-bottom:30px;text-align:center}
+.world-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:400px}
+.world-btn{position:relative;background:var(--card);border:3px solid var(--gold);border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:140px;transition:transform .1s}
+.world-btn:hover{transform:scale(1.03)}
+.world-btn img{width:80px;height:80px;object-fit:contain;border-radius:8px}
+.world-btn .world-name{font-size:1.1rem;font-weight:bold;color:var(--gold)}
+.world-btn .world-status{position:absolute;top:8px;right:10px;font-size:1.4rem}
+.world-btn.completed{border-color:var(--green)}
+.world-btn.completed .world-status{color:var(--green)}
+
+/* ── GAME SCREEN ── */
+#game-screen{flex-direction:column;justify-content:flex-start;padding-top:10px}
+.game-header{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:600px;margin-bottom:10px}
+.game-header .world-label{font-size:1rem;color:var(--gold);font-weight:bold}
+.game-header .progress-text{font-size:.9rem;color:#aaa}
+.progress-bar{width:100%;max-width:600px;height:12px;background:#333;border-radius:6px;margin-bottom:16px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:6px;transition:width .4s ease}
+.sentence-banner{width:100%;max-width:600px;background:linear-gradient(90deg,#2a2a4a,#1a1a3a);border:2px solid var(--gold);border-radius:12px;padding:14px 20px;margin-bottom:14px;text-align:center;cursor:pointer;position:relative}
+.sentence-banner .sentence-text{font-size:1.3rem;font-weight:bold;color:var(--gold);line-height:1.5}
+.sentence-banner .tts-hint{font-size:.75rem;color:#888;margin-top:4px}
+.tts-on{position:absolute;top:6px;right:10px;font-size:.8rem;padding:2px 8px;background:var(--blue);border-radius:8px;color:#fff}
+
+.scene-area{position:relative;width:100%;max-width:600px;aspect-ratio:16/9;background:#0f0f2a;border-radius:12px;overflow:hidden;margin-bottom:14px}
+.scene-area img{width:100%;height:100%;object-fit:contain}
+.drop-zone{position:absolute;border:3px dashed rgba(255,255,255,.5);border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .2s,border-color .2s;min-width:70px;min-height:70px}
+.drop-zone.active{background:rgba(78,204,163,.25);border-color:var(--green)}
+.drop-zone.hover{background:rgba(245,197,24,.3);border-color:var(--gold)}
+.drop-zone.correct{background:rgba(78,204,163,.5);border-color:var(--green);border-style:solid}
+.drop-zone.wrong{background:rgba(233,69,96,.4);border-color:var(--accent);border-style:solid;animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+.items-tray{width:100%;max-width:600px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding:10px;background:#16213e;border-radius:12px}
+.drag-item{width:80px;height:80px;object-fit:contain;cursor:grab;transition:transform .15s;filter:drop-shadow(0 3px 6px rgba(0,0,0,.4));border-radius:8px}
+.drag-item:active{cursor:grabbing}
+.drag-item.dragging{opacity:.5;transform:scale(1.1)}
+.drag-item.placed{opacity:.3;pointer-events:none}
+
+/* ── FEEDBACK OVERLAY ── */
+#feedback-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center}
+#feedback-overlay.show{display:flex}
+.feedback-box{background:var(--card);border:3px solid var(--accent);border-radius:16px;padding:24px;max-width:340px;text-align:center}
+.feedback-box.correct{border-color:var(--green)}
+.feedback-box h3{font-size:1.4rem;margin-bottom:12px}
+.feedback-box.correct h3{color:var(--green)}
+.feedback-box.wrong h3{color:var(--accent)}
+.feedback-box img{width:200px;height:200px;object-fit:contain;border-radius:8px;margin:10px 0}
+.feedback-box p{font-size:1rem;color:#ccc;margin-bottom:16px}
+.feedback-box .preposition{font-size:2rem;font-weight:bold;color:var(--gold);margin-bottom:10px}
+.feedback-box button{margin-top:8px}
+
+/* ── RESULT SCREEN ── */
+#result-screen{text-align:center}
+.result-title{font-size:2rem;font-weight:bold;color:var(--gold);margin-bottom:10px}
+.result-score{font-size:3rem;font-weight:bold;color:var(--green);margin:20px 0}
+.result-grade{font-size:1.5rem;color:#aaa;margin-bottom:30px}
+.result-stars{font-size:2.5rem;margin-bottom:20px}
+.review-section{width:100%;max-width:500px;max-height:35vh;overflow-y:auto;margin-bottom:20px}
+.review-item{background:var(--card);border-radius:10px;padding:12px;margin-bottom:10px;text-align:left;display:flex;align-items:center;gap:12px}
+.review-item img{width:60px;height:60px;object-fit:contain;flex-shrink:0}
+.review-item .review-text{font-size:.95rem;color:#ccc}
+.review-item .review-wrong{color:var(--accent);font-size:.85rem}
+.result-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+/* ── MISC ── */
+.star{color:#f5c518}
+
+/* mobile adjustments */
+@media(max-width:480px){
+html,body{font-size:16px}
+.world-grid{max-width:340px}
+.world-btn{min-height:120px;padding:14px}
+.world-btn img{width:60px;height:60px}
+.drag-item{width:70px;height:70px}
+.drop-zone{min-width:60px;min-height:60px}
+.sentence-banner .sentence-text{font-size:1.1rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MAP SCREEN ══ -->
+<div id="map-screen" class="screen active">
+  <div class="map-title">🏴‍☠️ Preposition Treasure Hunt</div>
+  <div class="map-subtitle">Find the treasure in4 worlds!</div>
+  <div class="world-grid">
+    <button class="world-btn" data-world="table" onclick="startWorld('table')">
+      <img src="assets/images/scenarios/scenario_table.png" alt="Table World">
+      <span class="world-name">Table</span>
+      <span class="world-status">🔒</span>
+    </button>
+    <button class="world-btn" data-world="chair" onclick="startWorld('chair')">
+      <img src="assets/images/scenarios/scenario_chair.png" alt="Chair World">
+      <span class="world-name">Chair</span>
+      <span class="world-status">🔒</span>
+    </button>
+    <button class="world-btn" data-world="schoolbag" onclick="startWorld('schoolbag')">
+      <img src="assets/images/scenarios/scenario_schoolbag.png" alt="School Bag World">
+      <span class="world-name">School Bag</span>
+      <span class="world-status">🔒</span>
+    </button>
+    <button class="world-btn" data-world="box" onclick="startWorld('box')">
+      <img src="assets/images/scenarios/scenario_box.png" alt="Box World">
+      <span class="world-name">Box</span>
+      <span class="world-status">🔒</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div id="game-screen" class="screen">
+  <div class="game-header">
+    <span class="world-label" id="world-label">World: Table</span>
+    <span class="progress-text" id="progress-text">Q1 / 10</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="sentence-banner" id="sentence-banner" onclick="speakSentence()">
+    <span class="tts-hint">🔊 Tap to read aloud</span>
+    <div class="sentence-text" id="sentence-text">The pencil is on the table.</div>
+    <span class="tts-on" id="tts-badge">🔊 TTS ON</span>
+  </div>
+  <div class="scene-area" id="scene-area">
+    <img id="scene-img" src="assets/images/scenarios/scenario_table.png" alt="scene">
+    <!-- drop zones injected by JS -->
+  </div>
+  <div class="items-tray" id="items-tray">
+    <!-- drag items injected by JS -->
+  </div>
+</div>
+
+<!-- ══ RESULT SCREEN ══ -->
+<div id="result-screen" class="screen">
+  <div class="result-title">🎉 All Worlds Complete!</div>
+  <div class="result-stars" id="result-stars"></div>
+  <div class="result-score" id="result-score">85%</div>
+  <div class="result-grade" id="result-grade">Great Job!</div>
+  <div class="review-section" id="review-section"></div>
+  <div class="result-actions">
+    <button class="btn-restart" onclick="restartGame()">🔄 Play Again</button>
+    <button class="btn-secondary" onclick="goToMap()">🗺️ World Map</button>
+  </div>
+</div>
+
+<!-- ══ FEEDBACK OVERLAY ══ -->
+<div id="feedback-overlay">
+  <div class="feedback-box" id="feedback-box">
+    <h3 id="feedback-title">Correct!</h3>
+    <img id="feedback-img" src="" alt="visual prompt">
+    <p id="feedback-text"></p>
+    <div class="preposition" id="feedback-preposition"></div>
+    <button class="btn-primary" id="feedback-btn" onclick="closeFeedback()">Got it! Try Again</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   GAME DATA
+═══════════════════════════════════════ */
+const PREPOSITIONS = ['on','under','in','behind','in front of'];
+const ITEMS = ['pencil','eraser','apple'];
+const SCENES = {
+  table:    { img:'assets/images/scenarios/scenario_table.png',    label:'Table' },
+  chair:    { img:'assets/images/scenarios/scenario_chair.png',    label:'Chair' },
+  schoolbag:{ img:'assets/images/scenarios/scenario_schoolbag.png',label:'School Bag' },
+  box:      { img:'assets/images/scenarios/scenario_box.png',      label:'Box' }
+};
+const PROMPT_IMGS = {
+  on:         'assets/images/prompts/prompt_on.png',
+  under:      'assets/images/prompts/prompt_under.png',
+  in:         'assets/images/prompts/prompt_in.png',
+  behind:     'assets/images/prompts/prompt_behind.png',
+  'in front of':'assets/images/prompts/prompt_infront.png'
+};
+const ITEM_IMGS = {
+  pencil:'assets/images/items/item_pencil.png',
+  eraser:'assets/images/items/item_eraser.png',
+  apple: 'assets/images/items/item_apple.png'
+};
+
+/* ═══════════════════════════════════════
+   WORLD QUESTIONS (10 per world)
+   Q1-5: single drop zone, single item
+   Q6-10: +1 distractor zone OR +1 distractor item
+═══════════════════════════════════════ */
+const QUESTIONS = {
+  table:[
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the table.',     zones:[{id:'z1',top:'30%',left:'35%',w:'22%',h:'28%'}]},
+    {item:'eraser',prep:'under',    sentence:'The eraser is under the table.',  zones:[{id:'z1',top:'72%',left:'35%',w:'22%',h:'20%'}]},
+    {item:'apple', prep:'on',        sentence:'The apple is on the table.',      zones:[{id:'z1',top:'30%',left:'35%',w:'22%',h:'28%'}]},
+    {item:'pencil',prep:'under',    sentence:'The pencil is under the table.',   zones:[{id:'z1',top:'72%',left:'35%',w:'22%',h:'20%'}]},
+    {item:'eraser',prep:'on',        sentence:'The eraser is on the table.', zones:[{id:'z1',top:'30%',left:'35%',w:'22%',h:'28%'}]},
+    // Q6-10: +1 distractor zone
+    {item:'apple', prep:'under',    sentence:'The apple is under the table.',    zones:[
+      {id:'z1',top:'72%',left:'35%',w:'22%',h:'20%',correct:true},
+      {id:'z2',top:'30%',left:'68%',w:'18%',h:'18%'}
+    ]},
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the table.',    zones:[
+      {id:'z1',top:'30%',left:'35%',w:'22%',h:'28%',correct:true},
+      {id:'z2',top:'72%',left:'35%',w:'22%',h:'20%'}
+    ]},
+    {item:'eraser',prep:'under',    sentence:'The eraser is under the table.', zones:[
+      {id:'z1',top:'72%',left:'35%',w:'22%',h:'20%',correct:true},
+      {id:'z2',top:'30%',left:'35%',w:'22%',h:'28%'}
+    ]},
+    {item:'apple', prep:'on',        sentence:'The apple is on the table.',      zones:[
+      {id:'z1',top:'30%',left:'35%',w:'22%',h:'28%',correct:true},
+      {id:'z2',top:'72%',left:'35%',w:'22%',h:'20%'}
+    ]},
+    {item:'pencil',prep:'under',    sentence:'The pencil is under the table.', zones:[
+      {id:'z1',top:'72%',left:'35%',w:'22%',h:'20%',correct:true},
+      {id:'z2',top:'30%',left:'35%',w:'22%',h:'28%'}
+    ]},
+  ],
+  chair:[
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the chair.',     zones:[{id:'z1',top:'35%',left:'38%',w:'20%',h:'22%'}]},
+    {item:'eraser',prep:'behind',   sentence:'The eraser is behind the chair.', zones:[{id:'z1',top:'35%',left:'68%',w:'18%',h:'22%'}]},
+    {item:'apple', prep:'on',        sentence:'The apple is on the chair.',      zones:[{id:'z1',top:'35%',left:'38%',w:'20%',h:'22%'}]},
+    {item:'pencil',prep:'behind',   sentence:'The pencil is behind the chair.', zones:[{id:'z1',top:'35%',left:'68%',w:'18%',h:'22%'}]},
+    {item:'eraser',prep:'on',        sentence:'The eraser is on the chair.', zones:[{id:'z1',top:'35%',left:'38%',w:'20%',h:'22%'}]},
+    // Q6-10: +1 distractor item
+    {item:'apple', prep:'behind',   sentence:'The apple is behind the chair.',  zones:[
+      {id:'z1',top:'35%',left:'68%',w:'18%',h:'22%',correct:true}
+    ],distractorItem:'pencil'},
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the chair.',    zones:[
+      {id:'z1',top:'35%',left:'38%',w:'20%',h:'22%',correct:true}
+    ],distractorItem:'eraser'},
+    {item:'eraser',prep:'behind',   sentence:'The eraser is behind the chair.', zones:[
+      {id:'z1',top:'35%',left:'68%',w:'18%',h:'22%',correct:true}
+    ],distractorItem:'apple'},
+    {item:'apple', prep:'on',        sentence:'The apple is on the chair.', zones:[
+      {id:'z1',top:'35%',left:'38%',w:'20%',h:'22%',correct:true}
+    ],distractorItem:'pencil'},
+    {item:'pencil',prep:'behind',   sentence:'The pencil is behind the chair.', zones:[
+      {id:'z1',top:'35%',left:'68%',w:'18%',h:'22%',correct:true}
+    ],distractorItem:'eraser'},
+  ],
+  schoolbag:[
+    {item:'pencil',prep:'in',        sentence:'The pencil is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%'}]},
+    {item:'eraser',prep:'in',        sentence:'The eraser is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%'}]},
+    {item:'apple', prep:'in',        sentence:'The apple is in the school bag.',  zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%'}]},
+    {item:'pencil',prep:'in',        sentence:'The pencil is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%'}]},
+    {item:'eraser',prep:'in',        sentence:'The eraser is in the school bag.', zones:[{id:'z1',top:'30%',left:'38%',w:'22%',h:'30%'}]},
+    // Q6-10: +1 distractor zone
+    {item:'apple', prep:'in',        sentence:'The apple is in the school bag.', zones:[
+      {id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true},
+      {id:'z2',top:'72%',left:'38%',w:'18%',h:'18%'}
+    ]},
+    {item:'pencil',prep:'in',        sentence:'The pencil is in the school bag.', zones:[
+      {id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true},
+      {id:'z2',top:'72%',left:'38%',w:'18%',h:'18%'}
+    ]},
+    {item:'eraser',prep:'in',        sentence:'The eraser is in the school bag.', zones:[
+      {id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true},
+      {id:'z2',top:'72%',left:'38%',w:'18%',h:'18%'}
+    ]},
+    {item:'apple', prep:'in',        sentence:'The apple is in the school bag.',  zones:[
+      {id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true},
+      {id:'z2',top:'72%',left:'38%',w:'18%',h:'18%'}
+    ]},
+    {item:'pencil',prep:'in',        sentence:'The pencil is in the school bag.', zones:[
+      {id:'z1',top:'30%',left:'38%',w:'22%',h:'30%',correct:true},
+      {id:'z2',top:'72%',left:'38%',w:'18%',h:'18%'}
+    ]},
+  ],
+  box:[
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the box.',       zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%'}]},
+    {item:'eraser',prep:'on',        sentence:'The eraser is on the box.',     zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%'}]},
+    {item:'apple', prep:'on',        sentence:'The apple is on the box.',        zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%'}]},
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the box.',       zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%'}]},
+    {item:'eraser',prep:'on',        sentence:'The eraser is on the box.',     zones:[{id:'z1',top:'28%',left:'38%',w:'22%',h:'28%'}]},
+    // Q6-10: +1 distractor zone
+    {item:'apple', prep:'on',        sentence:'The apple is on the box.',        zones:[
+      {id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true},
+      {id:'z2',top:'68%',left:'38%',w:'18%',h:'18%'}
+    ]},
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the box.',      zones:[
+      {id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true},
+      {id:'z2',top:'68%',left:'38%',w:'18%',h:'18%'}
+    ]},
+    {item:'eraser',prep:'on',        sentence:'The eraser is on the box.',     zones:[
+      {id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true},
+      {id:'z2',top:'68%',left:'38%',w:'18%',h:'18%'}
+    ]},
+    {item:'apple', prep:'on',        sentence:'The apple is on the box.',       zones:[
+      {id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true},
+      {id:'z2',top:'68%',left:'38%',w:'18%',h:'18%'}
+    ]},
+    {item:'pencil',prep:'on',        sentence:'The pencil is on the box.',     zones:[
+      {id:'z1',top:'28%',left:'38%',w:'22%',h:'28%',correct:true},
+      {id:'z2',top:'68%',left:'38%',w:'18%',h:'18%'}
+    ]},
+  ]
+};
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let currentWorld = null;
+let currentQ = 0; // 0-indexed question index within world
+let score = 0;
+let wrongAnswers = []; // {world, qIndex, question}
+let completedWorlds = new Set();
+let ttsEnabled = true;
+let draggedItem = null;
+let draggedEl = null;
+let snapRadius = 50; // px snap radius for touch
+
+// Load saved progress
+function loadProgress(){
+  try{
+    const d = JSON.parse(localStorage.getItem('pth_progress')||'{}');
+    completedWorlds = new Set(d.completedWorlds||[]);
+    wrongAnswers = d.wrongAnswers||[];
+    updateMapUI();
+  }catch(e){}
+}
+function saveProgress(){
+  localStorage.setItem('pth_progress',JSON.stringify({
+    completedWorlds:[...completedWorlds],
+    wrongAnswers
+  }));
+}
+
+/* ═══════════════════════════════════════
+   SCREEN NAVIGATION
+═══════════════════════════════════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goToMap(){
+  showScreen('map-screen');
+  updateMapUI();
+}
+function restartGame(){
+  completedWorlds.clear();
+  wrongAnswers=[];
+  score=0;
+  saveProgress();
+  goToMap();
+}
+
+/* ═══════════════════════════════════════
+   MAP UI
+═══════════════════════════════════════ */
+function updateMapUI(){
+  document.querySelectorAll('.world-btn').forEach(btn=>{
+    const w = btn.dataset.world;
+    const done = completedWorlds.has(w);
+    btn.classList.toggle('completed',done);
+    btn.querySelector('.world-status').textContent = done?'✅':'🔒';
+  });
+}
+
+/* ═══════════════════════════════════════
+   GAME LOGIC
+═══════════════════════════════════════ */
+function startWorld(world){
+  currentWorld = world;
+  currentQ = 0;
+  score = 0;
+  showScreen('game-screen');
+  document.getElementById('world-label').textContent = 'World: ' + SCENES[world].label;
+  document.getElementById('scene-img').src = SCENES[world].img;
+  loadQuestion();
+}
+
+function loadQuestion(){
+  const qs = QUESTIONS[currentWorld];
+  if(currentQ >= qs.length){ finishWorld(); return; }
+  const q = qs[currentQ];
+
+  // Update header
+  document.getElementById('progress-text').textContent = `Q${currentQ+1} / ${qs.length}`;
+  document.getElementById('progress-fill').style.width = `${(currentQ/qs.length)*100}%`;
+
+  // Sentence
+  document.getElementById('sentence-text').textContent = q.sentence;
+  if(ttsEnabled) speakSentence();
+
+  // Build drop zones
+  const scene = document.getElementById('scene-area');
+  // Remove old zones
+  scene.querySelectorAll('.drop-zone').forEach(z=>z.remove());
+  q.zones.forEach(z=>{
+    const dz = document.createElement('div');
+    dz.className='drop-zone';
+    dz.id=z.id;
+    dz.style.top=z.top;dz.style.left=z.left;
+    dz.style.width=z.w;dz.style.height=z.h;
+    dz.dataset.correct = z.correct?'true':'false';
+    scene.appendChild(dz);
+    setupDropZone(dz);
+  });
+
+  // Build items tray
+  const tray = document.getElementById('items-tray');
+  tray.innerHTML='';
+  const items = [q.item];
+  if(q.distractorItem) items.push(q.distractorItem);
+  // shuffle
+  items.sort(()=>Math.random()-.5);
+  items.forEach(itemName=>{
+    const img = document.createElement('img');
+    img.className='drag-item';
+    img.id='item-'+itemName;
+    img.src=ITEM_IMGS[itemName];
+    img.alt=itemName;
+    img.draggable=true;
+    img.dataset.item=itemName;
+    setupDragItem(img);
+    tray.appendChild(img);
+  });
+}
+
+function setupDragItem(el){
+  // Mouse drag
+  el.addEventListener('dragstart',e=>{
+    draggedItem=el.dataset.item;
+    draggedEl=el;
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+    e.dataTransfer.setData('text/plain',draggedItem);
+  });
+  el.addEventListener('dragend',e=>{
+    el.classList.remove('dragging');
+    draggedItem=null;draggedEl=null;
+  });
+
+  // Touch drag
+  let touchClone=null, startX, startY;
+  el.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    draggedItem=el.dataset.item;
+    draggedEl=el;
+    const t=e.touches[0];
+    startX=t.clientX; startY=t.clientY;
+    // clone for visual drag
+    touchClone=el.cloneNode(true);
+    touchClone.style.position='fixed';
+    touchClone.style.width=el.offsetWidth+'px';
+    touchClone.style.height=el.offsetHeight+'px';
+    touchClone.style.left=t.clientX-el.offsetWidth/2+'px';
+    touchClone.style.top=t.clientY-el.offsetHeight/2+'px';
+    touchClone.style.opacity='.85';
+    touchClone.style.pointerEvents='none';
+    touchClone.style.zIndex='999';
+    touchClone.style.transform='scale(1.1)';
+    document.body.appendChild(touchClone);
+    el.classList.add('dragging');
+  },{passive:false});
+  el.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(!touchClone)return;
+    const t=e.touches[0];
+    touchClone.style.left=t.clientX-el.offsetWidth/2+'px';
+    touchClone.style.top=t.clientY-el.offsetHeight/2+'px';
+    // highlight drop zones near touch
+    document.querySelectorAll('.drop-zone').forEach(dz=>{
+      const r=dz.getBoundingClientRect();
+      const cx=r.left+r.width/2, cy=r.top+r.height/2;
+      const dist=Math.hypot(t.clientX-cx,t.clientY-cy);
+      dz.classList.toggle('hover',dist<snapRadius*2);
+    });
+  },{passive:false});
+  el.addEventListener('touchend',e=>{
+    e.preventDefault();
+    if(touchClone){
+      const t=e.changedTouches[0];
+      // find closest drop zone within snap radius
+      let bestZone=null, bestDist=snapRadius;
+      document.querySelectorAll('.drop-zone').forEach(dz=>{
+        const r=dz.getBoundingClientRect();
+        const cx=r.left+r.width/2, cy=r.top+r.height/2;
+        const dist=Math.hypot(t.clientX-cx,t.clientY-cy);
+        if(dist<bestDist){bestDist=dist;bestZone=dz;}
+      });
+      if(bestZone){
+        handleDrop(bestZone,draggedItem);
+      }
+      document.body.removeChild(touchClone);
+      touchClone=null;
+    }
+    el.classList.remove('dragging');
+    document.querySelectorAll('.drop-zone').forEach(dz=>dz.classList.remove('hover'));
+    draggedItem=null;draggedEl=null;
+  },{passive:false});
+}
+
+function setupDropZone(dz){
+  dz.addEventListener('dragover',e=>{
+    e.preventDefault();
+    dz.classList.add('hover');
+  });
+  dz.addEventListener('dragleave',e=>{
+    dz.classList.remove('hover');
+  });
+  dz.addEventListener('drop',e=>{
+    e.preventDefault();
+    dz.classList.remove('hover');
+    const item=e.dataTransfer.getData('text/plain');
+    handleDrop(dz,item);
+  });
+}
+
+function handleDrop(dropZone,itemName){
+  const q = QUESTIONS[currentWorld][currentQ];
+  const isCorrect = dropZone.dataset.correct==='true' && itemName===q.item;
+
+  if(isCorrect){
+    score++;
+    dropZone.classList.add('correct');
+    if(draggedEl) draggedEl.classList.add('placed');
+    playSound('correct');
+    setTimeout(()=>{
+      dropZone.classList.remove('correct');
+      currentQ++;
+      loadQuestion();
+    },800);
+  } else {
+    dropZone.classList.add('wrong');
+    playSound('wrong');
+    // Record wrong answer
+    wrongAnswers.push({world:currentWorld,qIndex:currentQ,question:q});
+    setTimeout(()=>{
+      dropZone.classList.remove('wrong');
+      showFeedback(q,itemName);
+    },400);
+  }
+}
+
+function showFeedback(q,itemName){
+  const overlay = document.getElementById('feedback-overlay');
+  const box = document.getElementById('feedback-box');
+  box.className='feedback-box wrong';
+  document.getElementById('feedback-title').textContent='❌ Not quite!';
+  document.getElementById('feedback-img').src=PROMPT_IMGS[q.prep];
+  document.getElementById('feedback-text').textContent=`"${q.sentence}" — the ${q.item} goes ${q.prep}.`;
+  document.getElementById('feedback-preposition').textContent=q.prep.toUpperCase();
+  document.getElementById('feedback-btn').textContent='Try Again';
+  overlay.classList.add('show');
+}
+
+function closeFeedback(){
+  document.getElementById('feedback-overlay').classList.remove('show');
+  // Reset items for retry
+  document.querySelectorAll('.drag-item').forEach(img=>{
+    img.classList.remove('placed');
+ });
+  document.querySelectorAll('.drop-zone').forEach(dz=>{
+    dz.classList.remove('correct','wrong');
+  });
+}
+
+function finishWorld(){
+  completedWorlds.add(currentWorld);
+  saveProgress();
+  showScreen('result-screen');
+  const totalCorrect = score;
+  const totalQ = QUESTIONS[currentWorld].length;
+  const pct = Math.round((totalCorrect/totalQ)*100);
+  document.getElementById('result-score').textContent = pct+'%';
+  const stars = pct>=90?'⭐⭐⭐':pct>=70?'⭐⭐':'⭐';
+  document.getElementById('result-stars').textContent = stars;
+  document.getElementById('result-grade').textContent =
+    pct>=90?'Perfect!':pct>=70?'Great Job!':pct>=50?'Good Try!':'Keep Practicing!';
+  document.getElementById('result-title').textContent = `🏆 ${SCENES[currentWorld].label} Complete!`;
+
+  // Review wrong answers
+  const reviewSection = document.getElementById('review-section');
+  const worldWrong = wrongAnswers.filter(w=>w.world===currentWorld);
+  if(worldWrong.length===0){
+    reviewSection.innerHTML='<p style="color:#aaa;text-align:center">No mistakes — amazing!</p>';
+  } else {
+    reviewSection.innerHTML='<p style="color:#f5c518;margin-bottom:10px">📝 Review Mistakes:</p>';
+    worldWrong.forEach(w=>{
+      const div=document.createElement('div');
+      div.className='review-item';
+      div.innerHTML=`
+        <img src="${PROMPT_IMGS[w.question.prep]}" alt="${w.question.prep}">
+        <div>
+          <div class="review-text">"${w.question.sentence}"</div>
+          <div class="review-wrong">Answer: ${w.question.prep}</div>
+        </div>`;
+      reviewSection.appendChild(div);
+    });
+  }
+}
+
+/* ═══════════════════════════════════════
+   TTS
+═══════════════════════════════════════ */
+function speakSentence(){
+  if(!ttsEnabled) return;
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(document.getElementById('sentence-text').textContent);
+    u.rate=.85; u.pitch=1.1;
+    window.speechSynthesis.speak(u);
+  }
+}
+document.getElementById('tts-badge').addEventListener('click',e=>{
+  e.stopPropagation();
+  ttsEnabled=!ttsEnabled;
+  document.getElementById('tts-badge').textContent = ttsEnabled?'🔊 TTS ON':'🔇 TTS OFF';
+});
+document.getElementById('sentence-banner').addEventListener('click',e=>{
+  if(e.target.id==='tts-badge') return;
+  speakSentence();
+});
+
+/* ═══════════════════════════════════════
+   AUDIO FEEDBACK (Web Audio API)
+═══════════════════════════════════════ */
+function playSound(type){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    if(type==='correct'){
+      osc.frequency.setValueAtTime(523,null);
+      osc.frequency.setValueAtTime(659,ctx.currentTime+.1);
+      osc.frequency.setValueAtTime(784,ctx.currentTime+.2);
+      gain.gain.setValueAtTime(.3,null);
+      gain.gain.exponentialRampToValueAtTime(.01,ctx.currentTime+.4);
+      osc.start();osc.stop(ctx.currentTime+.4);
+    } else {
+      osc.frequency.setValueAtTime(200,null);
+      gain.gain.setValueAtTime(.2,null);
+      gain.gain.exponentialRampToValueAtTime(.01,ctx.currentTime+.3);
+      osc.start();osc.stop(ctx.currentTime+.3);
+    }
+  }catch(e){}
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+loadProgress();
+</script>
+</body>
+</html>
